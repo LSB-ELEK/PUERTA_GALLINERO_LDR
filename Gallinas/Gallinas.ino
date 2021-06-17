@@ -8,12 +8,18 @@
 #define RELE1 2
 #define RELE2 3
 
+#define valor_max 650
+#define valor_min 450
+
 bool fc_up = 0;
 bool fc_down = 0;
 bool select = 0;
 bool up = 0;
 bool down = 0;
 int ldr = 0;
+
+bool primera = 1;
+bool finales = 0;
 
 int estado_man = 0;
 int estado_aut = 0;
@@ -39,11 +45,35 @@ void loop() {
   down = !digitalRead(DOWN);
   ldr = analogRead(LDR);
 
-  Serial.print("FC_UP: \t");Serial.println(fc_up);
-  Serial.print("FC_DOWN: \t");Serial.println(fc_down);
-  Serial.print("SELECT: \t");Serial.println(select);
-  Serial.print("UP: \t");Serial.println(up);
-  Serial.print("DOWN: \t");Serial.println(down);
+  //Serial.print("FC_UP: \t");Serial.println(fc_up);
+  //Serial.print("FC_DOWN: \t");Serial.println(fc_down);
+  //Serial.print("SELECT: \t");Serial.println(select);
+  //Serial.print("UP: \t");Serial.println(up);
+  //Serial.print("DOWN: \t");Serial.println(down);
+
+  if((millis()<5000)&&(primera)&&(select)){
+    if(!fc_up && !fc_down){
+      while(!finales){
+        if(fc_up || fc_down){
+          finales = 1;
+        }
+        fc_up = digitalRead(FC_UP);
+        fc_down = digitalRead(FC_DOWN);
+        Serial.print("FC_UP: \t");Serial.println(fc_up);
+        Serial.print("FC_DOWN: \t");Serial.println(fc_down);
+        Serial.print("Finales: \t");Serial.println(finales);
+        if((ldr>valor_max)&&(!fc_up)){
+          SUBE();
+        }else if((ldr<valor_min)&&(!fc_down)){
+          BAJA();
+        }
+        Serial.println("en while");
+      } 
+    }
+    Serial.println("PARAR");
+    PARA();
+    primera = 0;
+  }
   
   if(select){
     estado_aut = 0;
@@ -82,10 +112,10 @@ void loop() {
     switch(estado_aut){
       case 0:
         PARA();
-        if((ldr>650)&&(!fc_up)){
+        if((ldr>valor_max)&&(!fc_up)){
           estado_aut = 1;
         }
-        if((ldr<400)&&(!fc_down)){
+        if((ldr<valor_min)&&(!fc_down)){
           estado_aut = 2;
         }
         Serial.print("\t 0");
